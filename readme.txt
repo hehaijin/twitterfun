@@ -13,10 +13,11 @@ The project is using the Akka Streams API rather then the iteratee/enumerator in
 To run the project, first add credentials. Add folowing line to application.conf or a credentials.conf under the same folder. 
 Add supply the required credentials.
 
-
 twitter.apiKey=""
 twitter.apiSecret=""
 twitter.token=""
 twitter.tokenSecret=""
 
 
+
+Access "localhost:9000/stream/your-topic-here" to listen to twitter steam with any topic of interest.
