@@ -6,6 +6,7 @@
 GET     /                           controllers.Application.index
 GET     /tweets                     controllers.Application.tweets
 GET     /tweets2                     controllers.Application.tweets2
+GET     /index2						controllers.Application.index2
 
 
 
