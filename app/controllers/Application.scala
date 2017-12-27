@@ -8,15 +8,9 @@ import play.api.Play.current
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.ws._
-import play.api.libs.iteratee._
 import play.api.Logger
-import scala.concurrent.duration._
-import actors.TwitterStreamer
-import play.api.libs.json._
-import play.api.libs.streams.ActorFlow
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import play.api.mvc.WebSocket.MessageFlowTransformer
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import akka.stream.scaladsl.Framing
@@ -66,9 +60,7 @@ class Application @Inject() (cc: ControllerComponents, config: Configuration, ws
   
   def index()= Action{
     implicit request=>
-    Ok(views.html.wsindex("trump"))
-    
-    
+    Ok(views.html.wsindex("Christmas"))
   }
   
   
