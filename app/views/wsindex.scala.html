@@ -1,10 +1,10 @@
 
-@()(implicit request: play.api.mvc.RequestHeader)
+@(topic: String)(implicit request: play.api.mvc.RequestHeader)
 
 @main("tweet steam"){
 
 
-<h1>tweet steam</h1>
+<h1>tweet steam listening to <span id='topic'>@topic</span> </h1>
 <div id="tweets"></div>
  <script src="@routes.Assets.versioned("javascripts/tweet.js")" type="text/javascript"></script>
 

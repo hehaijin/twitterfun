@@ -3,10 +3,13 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.Application.index
-GET     /tweets                     controllers.Application.tweets
-GET     /tweets2                     controllers.Application.tweets2
-GET     /index2						controllers.Application.index2
+#gets the default topic which is "trump"
+GET     /                           controllers.Application.index()    
+#the websocket 
+GET     /tweets/:topic                     controllers.Application.tweets(topic)    
+#get any topic by this route entry
+
+GET     /stream/:topic              controllers.Application.stream(topic)   
 
 
 

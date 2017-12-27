@@ -19,6 +19,8 @@ import akka.stream.Materializer
 import play.api.mvc.WebSocket.MessageFlowTransformer
 import akka.stream.scaladsl._
 import akka.util.ByteString
+import akka.stream.scaladsl.Framing
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -34,50 +36,6 @@ class Application @Inject() (cc: ControllerComponents, config: Configuration, ws
    * will be called when the application receives a `GET` request with
    * a path of `/`.
    */
-  implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[String, JsValue]
-  def index() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index())
-  }
-
-  def tweets2() = Action {
-    request =>
-
-      val LoggingIteratee = Iteratee.foreach[Array[Byte]] {
-        array => Logger.info(array.map(_.toChar).mkString)
-
-      }
-
-      credentials.map {
-
-        case (a, as, t, ts) => {
-          ws.url("https://stream.twitter.com/1.1/statuses/filter.json")
-            .sign(OAuthCalculator(ConsumerKey(a, as), RequestToken(t, ts)))
-            .withQueryStringParameters("track" -> "trump")
-            .withMethod("POST")
-            .stream()
-            .map {
-              response =>
-                Logger.info(response.status.toString)
-                val source = response.bodyAsSource
-                val sink = Sink.foreach((t: ByteString) => {
-                  //Logger.info(getText(t))
-                  println("new message")
-                  // println(t.utf8String)
-
-                })
-                val runnable = source.toMat(sink)(Keep.right)
-                val r = runnable.run()
-                r.map(_ => println("the stream is closed"))
-              // Ok("stream closed")
-            }
-        }
-      } getOrElse {
-
-        Future.successful(InternalServerError("credentials missing"))
-      }
-
-      Ok("ok")
-  }
 
   def credentials = for {
     apiKey <- config.getString("twitter.apiKey")
@@ -87,33 +45,37 @@ class Application @Inject() (cc: ControllerComponents, config: Configuration, ws
   } yield (apiKey, apiSecret, token, tokenSecret)
 
  
-  def tweets = WebSocket.acceptOrResult[String,String]{
+  def tweets(topic: String) = WebSocket.acceptOrResult[String,String]{
     request =>
-    val fsource=getTwitterSource(credentials.get)
+    val fsource=getTwitterSource(topic,credentials.get)
     for(source <- fsource) yield Right(Flow.fromSinkAndSource(Sink.ignore, source))
 
   }
-
-  def getText(bs: ByteString) = (Json.parse(bs.utf8String) \ "text").asOpt[String].getOrElse("no text")
-
-  
-  
-  def getTwitterSource(credentials: (String, String, String, String)): Future[Source[String,_]] = {
+ 
+  def getTwitterSource(topic: String, credentials: (String, String, String, String)): Future[Source[String,_]] = {
   
      ws.url("https://stream.twitter.com/1.1/statuses/filter.json")
       .sign(OAuthCalculator(ConsumerKey(credentials._1, credentials._2), RequestToken(credentials._3, credentials._4)))
-      .withQueryStringParameters("track" -> "trump")
+      .withQueryStringParameters("track" -> topic)
       .withMethod("POST")
       .stream()
       .map {
-        response => response.bodyAsSource.map(t=> t.utf8String)
+        response => response.bodyAsSource.via(Framing.delimiter(ByteString.fromString("\n"), 20000)).map(t=> t.utf8String)
       }
   }
   
-  def index2()= Action{
+  def index()= Action{
     implicit request=>
-    Ok(views.html.wsindex())
+    Ok(views.html.wsindex("trump"))
     
+    
+  }
+  
+  
+  def stream(topic: String)= Action {
+    
+     implicit request=>
+    Ok(views.html.wsindex(topic))
     
   }
 
